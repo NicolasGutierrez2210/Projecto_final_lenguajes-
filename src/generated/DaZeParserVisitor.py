@@ -1,4 +1,4 @@
-# Generated from /home/shibakude-_-/Downloads/Proyecto_lenguajes/grammar/DaZeParser.g4 by ANTLR 4.13.2
+# Generated from DaZeParser.g4 by ANTLR 4.13.2
 from antlr4 import *
 if "." in __name__:
     from .DaZeParser import DaZeParser
@@ -21,6 +21,21 @@ class DaZeParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by DaZeParser#asignacion.
     def visitAsignacion(self, ctx:DaZeParser.AsignacionContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by DaZeParser#asignacion_indexada.
+    def visitAsignacion_indexada(self, ctx:DaZeParser.Asignacion_indexadaContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by DaZeParser#bucle_mientras_stmt.
+    def visitBucle_mientras_stmt(self, ctx:DaZeParser.Bucle_mientras_stmtContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by DaZeParser#bucle_para_stmt.
+    def visitBucle_para_stmt(self, ctx:DaZeParser.Bucle_para_stmtContext):
         return self.visitChildren(ctx)
 
 
@@ -234,6 +249,11 @@ class DaZeParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by DaZeParser#ExprDiccionario.
+    def visitExprDiccionario(self, ctx:DaZeParser.ExprDiccionarioContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by DaZeParser#ExprCadena.
     def visitExprCadena(self, ctx:DaZeParser.ExprCadenaContext):
         return self.visitChildren(ctx)
@@ -299,6 +319,11 @@ class DaZeParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by DaZeParser#ExprIndexacion.
+    def visitExprIndexacion(self, ctx:DaZeParser.ExprIndexacionContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by DaZeParser#ExprFichar.
     def visitExprFichar(self, ctx:DaZeParser.ExprFicharContext):
         return self.visitChildren(ctx)
@@ -306,6 +331,16 @@ class DaZeParserVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by DaZeParser#lista_expr.
     def visitLista_expr(self, ctx:DaZeParser.Lista_exprContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by DaZeParser#lista_diccionario.
+    def visitLista_diccionario(self, ctx:DaZeParser.Lista_diccionarioContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by DaZeParser#par_diccionario.
+    def visitPar_diccionario(self, ctx:DaZeParser.Par_diccionarioContext):
         return self.visitChildren(ctx)
 
 

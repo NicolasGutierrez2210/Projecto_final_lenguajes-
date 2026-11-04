@@ -7,7 +7,10 @@ programa
     ;
 
 sentencia
-    : asignacion
+    : asignacion_indexada
+    | asignacion
+    | bucle_mientras_stmt
+    | bucle_para_stmt
     | pipeline_stmt
     | graficar_stmt
     | guardar_stmt
@@ -20,6 +23,18 @@ sentencia
 
 asignacion
     : identificador ASIGNAR expr PUNTO_Y_COMA?
+    ;
+
+asignacion_indexada
+    : identificador LBRACK expr RBRACK ASIGNAR expr PUNTO_Y_COMA?
+    ;
+
+bucle_mientras_stmt
+    : EN_JUEGO LPAREN expr RPAREN LBRACE sentencia* RBRACE PUNTO_Y_COMA?
+    ;
+
+bucle_para_stmt
+    : RONDA LPAREN identificador EN expr RPAREN LBRACE sentencia* RBRACE PUNTO_Y_COMA?
     ;
 
 pipeline_stmt
@@ -205,7 +220,9 @@ expr
     | expr O expr                                               # ExprLogicaO
     | FICHAR LPAREN CADENA (COMA argumentos_con_nombre)? RPAREN # ExprFichar
     | identificador LPAREN lista_argumentos? RPAREN             # ExprLlamada
+    | expr LBRACK expr RBRACK                                   # ExprIndexacion
     | LBRACK lista_expr? RBRACK                                 # ExprLista
+    | LBRACE lista_diccionario? RBRACE                          # ExprDiccionario
     | LPAREN expr RPAREN                                        # ExprAgrupacion
     | identificador                                             # ExprIdentificador
     | ENTERO                                                    # ExprEntero
@@ -218,6 +235,14 @@ expr
 
 lista_expr
     : expr (COMA expr)*
+    ;
+
+lista_diccionario
+    : par_diccionario (COMA par_diccionario)*
+    ;
+
+par_diccionario
+    : (identificador | CADENA | ENTERO) DOS_PUNTOS expr
     ;
 
 identificador
@@ -259,4 +284,6 @@ identificador
     | PROYECTAR
     | RESULTADO
     | TACTICA
+    | EN_JUEGO
+    | RONDA
     ;

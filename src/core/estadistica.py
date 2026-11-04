@@ -1,5 +1,13 @@
-import math
+"""
+Modulo de calculos estadisticos descriptivos para DaZe.
+Implementacion pura sin dependencias de la libreria math.
+"""
 from typing import Iterable, List, Any, Union
+from .matematica import raiz_cuadrada
+
+
+def _es_nan(val: Any) -> bool:
+    return isinstance(val, float) and (val != val)
 
 
 def _limpiar_numeros(valores: Iterable[Any]) -> List[Union[int, float]]:
@@ -8,7 +16,7 @@ def _limpiar_numeros(valores: Iterable[Any]) -> List[Union[int, float]]:
         if val is None or val == "":
             continue
         if isinstance(val, (int, float)):
-            if not (isinstance(val, float) and math.isnan(val)):
+            if not _es_nan(val):
                 limpios.append(val)
         elif isinstance(val, str):
             val_strip = val.strip()
@@ -40,7 +48,7 @@ def contar(valores: Iterable[Any] = None) -> int:
     count = 0
     for val in valores:
         if val is not None and val != "":
-            if isinstance(val, float) and math.isnan(val):
+            if _es_nan(val):
                 continue
             count += 1
     return count
@@ -89,4 +97,4 @@ def desviar(valores: Iterable[Any], muestral: bool = True) -> float:
     prom = sum(nums) / n
     varianza_suma = sum((x - prom) ** 2 for x in nums)
     divisor = (n - 1) if (muestral and n > 1) else n
-    return round(math.sqrt(varianza_suma / divisor), 4)
+    return round(raiz_cuadrada(varianza_suma / divisor), 4)

@@ -20,6 +20,10 @@ TACTICA: 'tactica';
 SI: 'si';
 SINO: 'sino';
 
+// Ciclos y estructuras (Corte 3)
+EN_JUEGO: 'en_juego';
+RONDA: 'ronda';
+
 // Modificadores y conectores
 EN: 'en';
 POR: 'por';

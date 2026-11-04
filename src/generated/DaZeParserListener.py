@@ -1,4 +1,4 @@
-# Generated from /home/shibakude-_-/Downloads/Proyecto_lenguajes/grammar/DaZeParser.g4 by ANTLR 4.13.2
+# Generated from DaZeParser.g4 by ANTLR 4.13.2
 from antlr4 import *
 if "." in __name__:
     from .DaZeParser import DaZeParser
@@ -32,6 +32,33 @@ class DaZeParserListener(ParseTreeListener):
 
     # Exit a parse tree produced by DaZeParser#asignacion.
     def exitAsignacion(self, ctx:DaZeParser.AsignacionContext):
+        pass
+
+
+    # Enter a parse tree produced by DaZeParser#asignacion_indexada.
+    def enterAsignacion_indexada(self, ctx:DaZeParser.Asignacion_indexadaContext):
+        pass
+
+    # Exit a parse tree produced by DaZeParser#asignacion_indexada.
+    def exitAsignacion_indexada(self, ctx:DaZeParser.Asignacion_indexadaContext):
+        pass
+
+
+    # Enter a parse tree produced by DaZeParser#bucle_mientras_stmt.
+    def enterBucle_mientras_stmt(self, ctx:DaZeParser.Bucle_mientras_stmtContext):
+        pass
+
+    # Exit a parse tree produced by DaZeParser#bucle_mientras_stmt.
+    def exitBucle_mientras_stmt(self, ctx:DaZeParser.Bucle_mientras_stmtContext):
+        pass
+
+
+    # Enter a parse tree produced by DaZeParser#bucle_para_stmt.
+    def enterBucle_para_stmt(self, ctx:DaZeParser.Bucle_para_stmtContext):
+        pass
+
+    # Exit a parse tree produced by DaZeParser#bucle_para_stmt.
+    def exitBucle_para_stmt(self, ctx:DaZeParser.Bucle_para_stmtContext):
         pass
 
 
@@ -413,6 +440,15 @@ class DaZeParserListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by DaZeParser#ExprDiccionario.
+    def enterExprDiccionario(self, ctx:DaZeParser.ExprDiccionarioContext):
+        pass
+
+    # Exit a parse tree produced by DaZeParser#ExprDiccionario.
+    def exitExprDiccionario(self, ctx:DaZeParser.ExprDiccionarioContext):
+        pass
+
+
     # Enter a parse tree produced by DaZeParser#ExprCadena.
     def enterExprCadena(self, ctx:DaZeParser.ExprCadenaContext):
         pass
@@ -530,6 +566,15 @@ class DaZeParserListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by DaZeParser#ExprIndexacion.
+    def enterExprIndexacion(self, ctx:DaZeParser.ExprIndexacionContext):
+        pass
+
+    # Exit a parse tree produced by DaZeParser#ExprIndexacion.
+    def exitExprIndexacion(self, ctx:DaZeParser.ExprIndexacionContext):
+        pass
+
+
     # Enter a parse tree produced by DaZeParser#ExprFichar.
     def enterExprFichar(self, ctx:DaZeParser.ExprFicharContext):
         pass
@@ -545,6 +590,24 @@ class DaZeParserListener(ParseTreeListener):
 
     # Exit a parse tree produced by DaZeParser#lista_expr.
     def exitLista_expr(self, ctx:DaZeParser.Lista_exprContext):
+        pass
+
+
+    # Enter a parse tree produced by DaZeParser#lista_diccionario.
+    def enterLista_diccionario(self, ctx:DaZeParser.Lista_diccionarioContext):
+        pass
+
+    # Exit a parse tree produced by DaZeParser#lista_diccionario.
+    def exitLista_diccionario(self, ctx:DaZeParser.Lista_diccionarioContext):
+        pass
+
+
+    # Enter a parse tree produced by DaZeParser#par_diccionario.
+    def enterPar_diccionario(self, ctx:DaZeParser.Par_diccionarioContext):
+        pass
+
+    # Exit a parse tree produced by DaZeParser#par_diccionario.
+    def exitPar_diccionario(self, ctx:DaZeParser.Par_diccionarioContext):
         pass
 
 

@@ -1,3 +1,5 @@
+from src.core.estructuras import Pila, Cola
+import src.core.matematica as mate
 import os
 import sys
 from typing import Any, Dict, List, Optional, Union
@@ -40,6 +42,35 @@ class DaZeSemanticVisitor(DaZeParserVisitor):
         self.base_dir = base_dir or os.getcwd()
         self.contexto_fila: Optional[Dict[str, Any]] = None
         self.errores_semanticos: List[DiagnosticError] = []
+        self._registrar_funciones_nativas()
+
+    def _registrar_funciones_nativas(self):
+        nativas = {
+            "raiz": mate.raiz_cuadrada,
+            "sqrt": mate.raiz_cuadrada,
+            "seno": mate.seno,
+            "coseno": mate.coseno,
+            "tangente": mate.tangente,
+            "abs": mate.valor_absoluto,
+            "potencia": mate.potencia,
+            "maximo": mate.maximo_coleccion,
+            "minimo": mate.minimo_coleccion,
+            "promedio": mate.promedio_coleccion,
+            "pila": lambda: Pila(),
+            "cola": lambda: Cola(),
+            "apilar": lambda p, x: p.apilar(x) if isinstance(p, Pila) else self._err_tipo("Pila", p),
+            "desapilar": lambda p: p.desapilar() if isinstance(p, Pila) else self._err_tipo("Pila", p),
+            "tope": lambda p: p.tope() if isinstance(p, Pila) else self._err_tipo("Pila", p),
+            "encolar": lambda c, x: c.encolar(x) if isinstance(c, Cola) else self._err_tipo("Cola", c),
+            "desencolar": lambda c: c.desencolar() if isinstance(c, Cola) else self._err_tipo("Cola", c),
+            "frente": lambda c: c.frente() if isinstance(c, Cola) else self._err_tipo("Cola", c),
+            "longitud": lambda col: len(col),
+        }
+        for nombre, func in nativas.items():
+            self.tabla_simbolos.definir(nombre, func, tipo="TACTICA")
+
+    def _err_tipo(self, esperado: str, recibido: Any):
+        raise TypeError(f"Se esperaba una estructura '{esperado}', pero se recibio '{type(recibido).__name__}'.")
 
     def _resolver_ruta(self, ruta: str) -> str:
         if os.path.isabs(ruta):
@@ -809,6 +840,92 @@ class DaZeSemanticVisitor(DaZeParserVisitor):
         else:
             raise self._error(f"'{nombre}' no es ejecutable como funcion.", ctx, nombre)
 
+
+
+    # -------------------------------------------------------------
+    # Metodos del Corte 3 (Ciclos, Arreglos y Diccionarios)
+    # -------------------------------------------------------------
+
+    def visitAsignacion_indexada(self, ctx: DaZeParser.Asignacion_indexadaContext):
+        id_nombre = ctx.identificador().getText()
+        simbolo = self.tabla_simbolos.obtener(id_nombre)
+        if not simbolo:
+            raise self._error(f"Variable '{id_nombre}' no declarada.", ctx, id_nombre)
+
+        contenedor = simbolo.valor
+        indice = self.visit(ctx.expr(0))
+        nuevo_valor = self.visit(ctx.expr(1))
+
+        if isinstance(contenedor, list):
+            if not isinstance(indice, int):
+                raise self._error(f"El indice debe ser entero, recibido '{type(indice).__name__}'.", ctx)
+            if indice < 0 or indice >= len(contenedor):
+                raise self._error(f"Indice {indice} fuera de rango para lista de tamano {len(contenedor)}.", ctx)
+            contenedor[indice] = nuevo_valor
+        elif isinstance(contenedor, dict):
+            contenedor[indice] = nuevo_valor
+        else:
+            raise self._error(f"El tipo '{type(contenedor).__name__}' no admite asignacion por indice.", ctx)
+        return nuevo_valor
+
+    def visitBucle_mientras_stmt(self, ctx: DaZeParser.Bucle_mientras_stmtContext):
+        resultado = None
+        while bool(self.visit(ctx.expr())):
+            for s in ctx.sentencia():
+                resultado = self.visit(s)
+        return resultado
+
+    def visitBucle_para_stmt(self, ctx: DaZeParser.Bucle_para_stmtContext):
+        var_iterador = ctx.identificador().getText()
+        coleccion = self.visit(ctx.expr())
+
+        if isinstance(coleccion, (Tabla, GrupoTabla)):
+            iterable = coleccion.filas if isinstance(coleccion, Tabla) else coleccion.tabla_origen.filas
+        elif isinstance(coleccion, (list, tuple)):
+            iterable = coleccion
+        elif isinstance(coleccion, dict):
+            iterable = list(coleccion.keys())
+        else:
+            raise self._error(f"No se puede iterar en 'ronda' sobre tipo '{type(coleccion).__name__}'.", ctx.expr())
+
+        resultado = None
+        for elemento in iterable:
+            if self.tabla_simbolos.existe(var_iterador):
+                self.tabla_simbolos.actualizar(var_iterador, elemento)
+            else:
+                self.tabla_simbolos.definir(var_iterador, elemento)
+
+            for s in ctx.sentencia():
+                resultado = self.visit(s)
+        return resultado
+
+    def visitExprDiccionario(self, ctx: DaZeParser.ExprDiccionarioContext):
+        d = {}
+        if ctx.lista_diccionario():
+            for p in ctx.lista_diccionario().par_diccionario():
+                clave_raw = p.getChild(0).getText()
+                if (clave_raw.startswith('"') and clave_raw.endswith('"')) or (clave_raw.startswith("'") and clave_raw.endswith("'")):
+                    clave = clave_raw[1:-1]
+                else:
+                    clave = clave_raw
+                d[clave] = self.visit(p.expr())
+        return d
+
+    def visitExprIndexacion(self, ctx: DaZeParser.ExprIndexacionContext):
+        contenedor = self.visit(ctx.expr(0))
+        indice = self.visit(ctx.expr(1))
+
+        if isinstance(contenedor, list):
+            if not isinstance(indice, int):
+                raise self._error(f"El indice debe ser entero, recibido '{type(indice).__name__}'.", ctx)
+            if indice < 0 or indice >= len(contenedor):
+                raise self._error(f"Indice {indice} fuera de rango para lista de longitud {len(contenedor)}.", ctx)
+            return contenedor[indice]
+        elif isinstance(contenedor, dict):
+            if indice not in contenedor:
+                raise self._error(f"Clave '{indice}' no existe en el diccionario.", ctx)
+            return contenedor[indice]
+        raise self._error(f"El tipo '{type(contenedor).__name__}' no admite acceso por corchetes.", ctx)
 
 def ejecutar_codigo(codigo: str, base_dir: Optional[str] = None):
     from src import parse_code

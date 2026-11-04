@@ -1,10 +1,9 @@
 from typing import Dict, Any, Optional, List
 from src.core.racoons import Tabla
+from src.core.estructuras import Pila, Cola
 
 
 class Simbolo:
-    """Representa una variable, tabla o funcion dentro de la tabla de simbolos."""
-
     def __init__(
         self,
         nombre: str,
@@ -36,6 +35,12 @@ class Simbolo:
             self.tipo = "BOOLEANO"
         elif isinstance(nuevo_valor, list):
             self.tipo = "LISTA"
+        elif isinstance(nuevo_valor, dict):
+            self.tipo = "DICCIONARIO"
+        elif isinstance(nuevo_valor, Pila):
+            self.tipo = "PILA"
+        elif isinstance(nuevo_valor, Cola):
+            self.tipo = "COLA"
 
     def __repr__(self) -> str:
         esquema_info = f", cols={self.esquema}" if self.esquema else ""
@@ -43,8 +48,6 @@ class Simbolo:
 
 
 class TablaSimbolos:
-    """Tabla de simbolos jerarquica con soporte de ambitos y resolucion lexica."""
-
     def __init__(self, padre: Optional["TablaSimbolos"] = None, nombre_ambito: str = "global"):
         self.padre = padre
         self.nombre_ambito = nombre_ambito
@@ -90,9 +93,6 @@ class TablaSimbolos:
     def existe(self, nombre: str) -> bool:
         return self.obtener(nombre) is not None
 
-    def existe_local(self, nombre: str) -> bool:
-        return nombre in self.simbolos
-
     def crear_ambito_hijo(self, nombre: str = "local") -> "TablaSimbolos":
         return TablaSimbolos(padre=self, nombre_ambito=nombre)
 
@@ -107,15 +107,14 @@ class TablaSimbolos:
             return "CADENA"
         elif isinstance(valor, list):
             return "LISTA"
+        elif isinstance(valor, dict):
+            return "DICCIONARIO"
+        elif isinstance(valor, Pila):
+            return "PILA"
+        elif isinstance(valor, Cola):
+            return "COLA"
         elif callable(valor):
             return "TACTICA"
         elif valor is None:
             return "NULO"
         return "DESCONOCIDO"
-
-    def listar_simbolos(self) -> Dict[str, Simbolo]:
-        resultado = {}
-        if self.padre:
-            resultado.update(self.padre.listar_simbolos())
-        resultado.update(self.simbolos)
-        return resultado

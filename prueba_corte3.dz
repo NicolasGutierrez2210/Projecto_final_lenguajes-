@@ -1,0 +1,55 @@
+# 1. Matematicas puras desde cero (Newton-Raphson y Series de Taylor)
+proyectar("=== 1. MOTOR MATEMATICO PURO ===");
+r = raiz(49);
+proyectar("Raiz cuadrada de 49 (Babilonico):");
+proyectar(r);
+
+s = seno(0);
+proyectar("Seno de 0 rad (Taylor):");
+proyectar(s);
+
+# 2. Arreglos y modificacion por corchetes []
+proyectar("=== 2. LISTAS Y ACCESO INDEXADO ===");
+tiempos = [10, 20, 30];
+proyectar("Primer tiempo antes de mutar:");
+proyectar(tiempos[0]);
+
+tiempos[0] = 99;
+proyectar("Lista tras modificar tiempos[0]:");
+proyectar(tiempos);
+
+# 3. Bucle condicional tematico (while -> en_juego)
+proyectar("=== 3. BUCLE EN_JUEGO (WHILE) ===");
+contador = 1;
+en_juego (contador <= 3) {
+    proyectar(contador);
+    contador = contador + 1;
+}
+
+# 4. Bucle iterador tematico (for -> ronda)
+proyectar("=== 4. BUCLE RONDA (FOR) ===");
+ronda (val en tiempos) {
+    proyectar(val);
+}
+
+# 5. Estructura Pila (LIFO)
+proyectar("=== 5. ESTRUCTURA PILA (LIFO) ===");
+mi_pila = pila();
+apilar(mi_pila, "Atleta 1");
+apilar(mi_pila, "Atleta 2");
+proyectar("Elemento en el tope:");
+proyectar(tope(mi_pila));
+desapilar(mi_pila);
+proyectar("Pila restante tras desapilar:");
+proyectar(mi_pila);
+
+# 6. Estructura Cola (FIFO)
+proyectar("=== 6. ESTRUCTURA COLA (FIFO) ===");
+mi_cola = cola();
+encolar(mi_cola, 100);
+encolar(mi_cola, 200);
+proyectar("Elemento al frente:");
+proyectar(frente(mi_cola));
+desencolar(mi_cola);
+proyectar("Cola restante tras desencolar:");
+proyectar(mi_cola);

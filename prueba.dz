@@ -1,0 +1,45 @@
+# Flujo de analisis de rendimiento deportivo en DaZe
+
+# 1. Carga del conjunto de datos de plantilla
+jugadores = fichar("datos/plantilla_temporada.csv", separador=",", encabezado=verdadero);
+
+# 2. Pipeline de preparacion y calculo de variables
+jugadores_aptos = jugadores
+    |> convocar(dorsal, club, posicion, minutos, goles, asistencias)
+    |> descartar(minutos > 0 y goles >= 0)
+    |> contratar(
+        contribucion = goles + asistencias,
+        promedio_gol = (goles * 90) / minutos,
+        rendimiento_total = (contribucion * 1.5) + (minutos / 100),
+        indice_impacto = rendimiento_total * 0.19
+    )
+    |> clasificar(por=[rendimiento_total], descendente=verdadero);
+
+# 3. Agrupacion y calculo de metricas descriptivas
+resumen_posiciones = jugadores_aptos
+    |> alinear(por=[posicion])
+    |> balance(
+        goles_totales = suma(goles),
+        media_asistencias = media(asistencias),
+        mediana_minutos = mediana(minutos),
+        desv_rendimiento = desv_std(rendimiento_total),
+        total_convocados = contar()
+    );
+
+# 4. Declaracion de visualizaciones graficas
+pizarra barras(resumen_posiciones) {
+    eje_x = posicion;
+    eje_y = goles_totales;
+    titulo = "Goles Totales por Posicion";
+    color = "azul";
+    guardar = "salidas/goles_por_posicion.png";
+}
+
+pizarra dispersion(jugadores_aptos) {
+    eje_x = minutos;
+    eje_y = rendimiento_total;
+    titulo = "Rendimiento vs Minutos Disputados";
+    color = "rojo";
+    guardar = "salidas/dispersion_rendimiento.png"
+
+

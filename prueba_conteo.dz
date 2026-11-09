@@ -1,0 +1,8 @@
+tactica contar(actual, limite) {
+    proyectar(actual);
+    si (actual < limite) {
+        resultado contar(actual + 1, limite);
+    }
+}
+
+contar(1, 5);

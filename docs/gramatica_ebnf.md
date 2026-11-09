@@ -6,6 +6,9 @@ A continuacion se presenta la especificacion sintactica formal de DaZe adaptada 
 programa            ::= { sentencia } EOF ;
 
 sentencia           ::= asignacion
+                      | asignacion_indexada
+                      | bucle_mientras_stmt
+                      | bucle_para_stmt
                       | pipeline_stmt
                       | graficar_stmt
                       | guardar_stmt
@@ -16,6 +19,12 @@ sentencia           ::= asignacion
                       | llamada_stmt ;
 
 asignacion          ::= identificador '=' expr [ ';' ] ;
+
+asignacion_indexada ::= identificador '[' expr ']' '=' expr [ ';' ] ;
+
+bucle_mientras_stmt ::= 'en_juego' '(' expr ')' '{' { sentencia } '}' [ ';' ] ;
+
+bucle_para_stmt     ::= 'ronda' '(' identificador 'en' expr ')' '{' { sentencia } '}' [ ';' ] ;
 
 pipeline_stmt       ::= [ identificador '=' ] expr { '|>' operacion_pipeline }+ [ ';' ] ;
 
@@ -98,6 +107,8 @@ expr                ::= expr ( '^' | '**' ) expr
                       | expr ( 'o' | 'or' | '||' ) expr
                       | 'fichar' '(' CADENA [ ',' argumentos_con_nombre ] ')'
                       | identificador '(' [ lista_argumentos ] ')'
+                      | expr '[' expr ']'
+                      | '{' [ lista_diccionario ] '}'
                       | '[' [ lista_expr ] ']'
                       | '(' expr ')'
                       | identificador
@@ -107,6 +118,9 @@ expr                ::= expr ( '^' | '**' ) expr
                       | ( 'verdadero' | 'true' )
                       | ( 'falso' | 'false' )
                       | ( 'nulo' | 'null' ) ;
+
+lista_diccionario   ::= par_diccionario { ',' par_diccionario } ;
+par_diccionario     ::= ( identificador | CADENA ) ':' expr ;
 
 lista_expr          ::= expr { ',' expr } ;
 

@@ -1,0 +1,3 @@
+cantera = fichar("datos/academia_juvenil.csv", separador=",", encabezado=verdadero);
+resumen_tactico = cantera |> balance(promedio_tactica = media(nota_tactica));
+proyectar(resumen_tactico);

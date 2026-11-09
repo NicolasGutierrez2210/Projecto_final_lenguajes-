@@ -1,177 +1,166 @@
 """
-Modulo de Machine Learning y Metodos Numericos Puros para DaZe.
-Implementado desde cero sin dependencias externas (sin scikit-learn ni numpy).
+Módulo de Machine Learning y Métodos Numéricos Puros para DaZe.
+Implementado sin dependencias externas (sin numpy, scipy ni scikit-learn).
 """
 
-def raiz_babilonica(x, iteraciones=15):
-    """Calculo de raiz cuadrada pura por Newton-Raphson."""
-    if x < 0:
-        return float('nan')
-    if x == 0:
+def _raiz(n, tolerancia=1e-12):
+    """Raíz cuadrada por algoritmo iterativo de Newton-Raphson."""
+    if n < 0:
+        raise ValueError("No se puede calcular raíz de número negativo")
+    if n == 0:
         return 0.0
-    estimacion = x / 2.0 if x > 1.0 else 1.0
-    for _ in range(iteraciones):
-        estimacion = 0.5 * (estimacion + x / estimacion)
-    return estimacion
-
-
-def distancia_euclidiana(p1, p2):
-    """Calcula la distancia euclidiana D-dimensional entre dos puntos."""
-    if len(p1) != len(p2):
-        raise ValueError("Los vectores deben tener la misma dimension.")
-    suma_cuadrados = sum((float(a) - float(b)) ** 2 for a, b in zip(p1, p2))
-    return raiz_babilonica(suma_cuadrados)
+    x = n / 2.0 if n >= 1 else 1.0
+    for _ in range(100):
+        sig = 0.5 * (x + n / x)
+        if abs(x - sig) < tolerancia:
+            return sig
+        x = sig
+    return x
 
 
 def correlacion_pearson(x, y):
-    """
-    Coeficiente de correlacion de Pearson (r).
-    Retorna un valor entre -1.0 y 1.0 cuantificando la relacion lineal.
-    """
-    n = len(x)
-    if n != len(y) or n < 2:
+    """Calcula el coeficiente de correlación r de Pearson en [-1.0, 1.0]."""
+    if len(x) != len(y) or len(x) < 2:
         return 0.0
-
+    n = len(x)
     media_x = sum(x) / n
     media_y = sum(y) / n
 
-    numerador = sum((xi - media_x) * (yi - media_y) for xi, yi in zip(x, y))
-    denom_x = sum((xi - media_x) ** 2 for xi in x)
-    denom_y = sum((yi - media_y) ** 2 for yi in y)
+    num = sum((xi - media_x) * (yi - media_y) for xi, yi in zip(x, y))
+    den_x = sum((xi - media_x) ** 2 for xi in x)
+    den_y = sum((yi - media_y) ** 2 for yi in y)
 
-    denominador = raiz_babilonica(denom_x * denom_y)
-    if denominador == 0.0:
+    denominador = _raiz(den_x * den_y)
+    if denominador == 0:
         return 0.0
+    return num / denominador
 
-    return numerador / denominador
+# Alias de correlación
+correlacion = correlacion_pearson
 
 
 class RegresionLineal:
-    """
-    Modelo de Regresion Lineal Simple (y = m*x + b).
-    Calculado por Minimos Cuadrados Ordinarios y optimizable por Descenso de Gradiente.
-    """
+    """Modelo de regresión lineal simple (y = mx + b) por MCO."""
     def __init__(self):
-        self.m = 0.0  # Pendiente
-        self.b = 0.0  # Intercepto
-        self.r2 = 0.0 # Coeficiente de determinacion R^2
-        self.entrenado = False
+        self.m = 0.0
+        self.b = 0.0
+        self.r2 = 0.0
+
+    def __getitem__(self, clave):
+        if hasattr(self, clave):
+            return getattr(self, clave)
+        raise KeyError(clave)
 
     def ajustar(self, x, y):
-        """Ajuste analitico por Minimos Cuadrados (formula cerrada)."""
         n = len(x)
-        if n != len(y) or n < 2:
-            raise ValueError("Se requieren al menos dos observaciones validas.")
+        if n < 2 or n != len(y):
+            raise ValueError("Se requieren al menos 2 pares de datos para ajustar regresión.")
 
         media_x = sum(x) / n
         media_y = sum(y) / n
 
-        numerador = sum((xi - media_x) * (yi - media_y) for xi, yi in zip(x, y))
-        denominador = sum((xi - media_x) ** 2 for xi in x)
+        num = sum((xi - media_x) * (yi - media_y) for xi, yi in zip(x, y))
+        den = sum((xi - media_x) ** 2 for xi in x)
 
-        if denominador == 0.0:
-            raise ZeroDivisionError("Varianza de X es cero; no se puede ajustar la recta.")
-
-        self.m = numerador / denominador
+        self.m = (num / den) if den != 0 else 0.0
         self.b = media_y - (self.m * media_x)
 
-        # Calculo de R^2
         ss_tot = sum((yi - media_y) ** 2 for yi in y)
-        ss_res = sum((yi - self.predecir(xi)) ** 2 for xi, yi in zip(x, y))
-        self.r2 = 1.0 - (ss_res / ss_tot) if ss_tot > 0 else 1.0
-        self.entrenado = True
-        return self
+        ss_res = sum((yi - (self.m * xi + self.b)) ** 2 for xi, yi in zip(x, y))
+        if ss_tot == 0:
+            self.r2 = 1.0 if ss_res == 0 else 0.0
+        else:
+            self.r2 = max(0.0, min(1.0, 1.0 - (ss_res / ss_tot)))
 
-    def ajustar_gradiente(self, x, y, lr=0.0001, epocas=1000):
-        """Ajuste numerico mediante Descenso de Gradiente."""
-        n = len(x)
-        self.m = 0.0
-        self.b = 0.0
-        for _ in range(epocas):
-            grad_m = 0.0
-            grad_b = 0.0
-            for xi, yi in zip(x, y):
-                error = (self.m * xi + self.b) - yi
-                grad_m += error * xi
-                grad_b += error
-            self.m -= (2.0 / n) * grad_m * lr
-            self.b -= (2.0 / n) * grad_b * lr
-        self.entrenado = True
         return self
 
     def predecir(self, x_val):
-        """Estima el valor de y para una entrada o lista de entradas."""
-        if isinstance(x_val, list):
-            return [round(self.m * xi + self.b, 4) for xi in x_val]
-        return round(self.m * x_val + self.b, 4)
+        return self.m * x_val + self.b
+
+
+def regresion_lineal(x, y):
+    """Ajusta una regresión lineal simple y retorna métricas en un diccionario."""
+    modelo = RegresionLineal()
+    modelo.ajustar(x, y)
+    return {
+        "m": modelo.m,
+        "b": modelo.b,
+        "r2": modelo.r2,
+        "modelo": modelo
+    }
+
+
+def predecir_regresion(modelo, x_val):
+    """Estima el valor de y para un x_val dado a partir de un modelo de regresión."""
+    if isinstance(modelo, dict):
+        if "m" in modelo and "b" in modelo:
+            return modelo["m"] * x_val + modelo["b"]
+        elif "modelo" in modelo:
+            return modelo["modelo"].predecir(x_val)
+    elif hasattr(modelo, "predecir"):
+        return modelo.predecir(x_val)
+    raise ValueError("Objeto de modelo no válido para inferencia")
 
 
 class KMeans:
-    """
-    Algoritmo de Agrupamiento K-Means (K-Medias) desde cero.
-    Segmenta datos multidimensionales sin etiquetas usando distancia euclidiana.
-    """
-    def __init__(self, k=2, max_iter=100):
+    """Algoritmo de clustering no supervisado en D dimensiones."""
+    def __init__(self, k=2, max_iter=20):
         self.k = k
         self.max_iter = max_iter
         self.centroides = []
         self.etiquetas = []
 
+    def __getitem__(self, clave):
+        if hasattr(self, clave):
+            return getattr(self, clave)
+        raise KeyError(clave)
+
+    def _distancia_euclidiana(self, p1, p2):
+        return _raiz(sum((a - b) ** 2 for a, b in zip(p1, p2)))
+
     def ajustar(self, datos):
-        """
-        datos: Lista de puntos, donde cada punto es [x1, x2, ...] o un escalar.
-        """
-        if not datos:
+        if not datos or self.k <= 0:
             return self
 
-        # Normalizar entradas si son escalares a listas [x]
-        matriz = [p if isinstance(p, list) else [float(p)] for p in datos]
-        n_muestras = len(matriz)
-        dim = len(matriz[0])
-
-        if self.k > n_muestras:
-            raise ValueError("K no puede ser mayor a la cantidad de datos.")
-
-        # Inicializacion determinista de centroides dispersos
-        paso = max(1, n_muestras // self.k)
-        self.centroides = [list(matriz[min(i * paso, n_muestras - 1)]) for i in range(self.k)]
+        k = min(self.k, len(datos))
+        self.centroides = [list(datos[i]) for i in range(k)]
+        self.etiquetas = [0] * len(datos)
+        dim = len(datos[0])
 
         for _ in range(self.max_iter):
-            # 1. Asignacion de clusters
             nuevas_etiquetas = []
-            for punto in matriz:
-                distancias = [distancia_euclidiana(punto, c) for c in self.centroides]
-                cluster_cercano = distancias.index(min(distancias))
-                nuevas_etiquetas.append(cluster_cercano)
+            for punto in datos:
+                distancias = [self._distancia_euclidiana(punto, c) for c in self.centroides]
+                min_idx = distancias.index(min(distancias))
+                nuevas_etiquetas.append(min_idx)
 
-            # 2. Recalculo de centroides (promedio por coordenada)
+            clusters = {i: [] for i in range(k)}
+            for idx, c_idx in enumerate(nuevas_etiquetas):
+                clusters[c_idx].append(datos[idx])
+
             nuevos_centroides = []
-            for j in range(self.k):
-                puntos_cluster = [matriz[idx] for idx, etiqueta in enumerate(nuevas_etiquetas) if etiqueta == j]
-                if puntos_cluster:
-                    centroide_promedio = [
-                        sum(p[d] for p in puntos_cluster) / len(puntos_cluster)
-                        for d in range(dim)
-                    ]
+            for i in range(k):
+                if clusters[i]:
+                    n_puntos = len(clusters[i])
+                    nuevo_c = [sum(p[d] for p in clusters[i]) / n_puntos for d in range(dim)]
                 else:
-                    centroide_promedio = self.centroides[j]
-                nuevos_centroides.append(centroide_promedio)
+                    nuevo_c = self.centroides[i]
+                nuevos_centroides.append(nuevo_c)
 
-            # Comprobar convergencia
-            diferencia = sum(
-                distancia_euclidiana(c_ant, c_nuev)
-                for c_ant, c_nuev in zip(self.centroides, nuevos_centroides)
-            )
             self.centroides = nuevos_centroides
-            self.etiquetas = nuevas_etiquetas
-
-            if diferencia < 1e-4:
+            if nuevas_etiquetas == self.etiquetas:
                 break
+            self.etiquetas = nuevas_etiquetas
 
         return self
 
-    def predecir(self, punto):
-        """Asigna un nuevo punto al cluster mas cercano."""
-        p = punto if isinstance(punto, list) else [float(punto)]
-        distancias = [distancia_euclidiana(p, c) for c in self.centroides]
-        return distancias.index(min(distancias))
+
+def agrupar_kmedias(datos, k=2, max_iter=20):
+    """Ejecuta agrupamiento K-Means y retorna centroides y etiquetas."""
+    km = KMeans(k=k, max_iter=max_iter)
+    km.ajustar(datos)
+    return {
+        "centroides": km.centroides,
+        "etiquetas": km.etiquetas,
+        "modelo": km
+    }

@@ -1,3 +1,4 @@
+from src.core.ml import correlacion_pearson, RegresionLineal, KMeans
 from src.core.estructuras import Pila, Cola
 import src.core.matematica as mate
 import os
@@ -824,6 +825,54 @@ class DaZeSemanticVisitor(DaZeParserVisitor):
 
     def visitExprLlamada(self, ctx: DaZeParser.ExprLlamadaContext):
         nombre = ctx.identificador().getText()
+        # --- MACHINE LEARNING PURO (CORTE 3) ---
+        if nombre in ("correlacion", "regresion_lineal", "predecir_regresion", "predecir", "agrupar_kmedias"):
+            _ml_args = []
+            if hasattr(ctx, "lista_argumentos") and ctx.lista_argumentos():
+                for _a in ctx.lista_argumentos().argumento():
+                    _expr = _a.expr() if hasattr(_a, "expr") and _a.expr() else _a
+                    _ml_args.append(self.visit(_expr))
+
+            if nombre == "correlacion":
+                if len(_ml_args) != 2:
+                    raise Exception("correlacion() requiere 2 listas: correlacion(x, y)")
+                return correlacion_pearson(_ml_args[0], _ml_args[1])
+
+            if nombre == "regresion_lineal":
+                if len(_ml_args) != 2:
+                    raise Exception("regresion_lineal() requiere 2 listas: regresion_lineal(x, y)")
+                modelo = RegresionLineal().ajustar(_ml_args[0], _ml_args[1])
+                return {
+                    "m": modelo.m,
+                    "b": modelo.b,
+                    "r2": modelo.r2,
+                    "_modelo": modelo
+                }
+
+            if nombre in ("predecir_regresion", "predecir"):
+                if len(_ml_args) != 2:
+                    raise Exception("predecir_regresion() requiere el modelo y el valor: predecir(mod, x)")
+                mod = _ml_args[0]
+                val = _ml_args[1]
+                if isinstance(mod, dict) and "_modelo" in mod:
+                    return mod["_modelo"].predecir(val)
+                if isinstance(mod, dict) and "m" in mod and "b" in mod:
+                    if isinstance(val, list):
+                        return [round(mod["m"] * v + mod["b"], 4) for v in val]
+                    return round(mod["m"] * val + mod["b"], 4)
+                raise Exception("El primer argumento debe ser un modelo entrenado de regresion.")
+
+            if nombre == "agrupar_kmedias":
+                if len(_ml_args) < 2:
+                    raise Exception("agrupar_kmedias() requiere datos y valor k: agrupar_kmedias(datos, k)")
+                datos = _ml_args[0]
+                k = int(_ml_args[1])
+                km = KMeans(k=k, max_iter=60).ajustar(datos)
+                return {
+                    "centroides": km.centroides,
+                    "etiquetas": km.etiquetas
+                }
+
         simbolo = self.tabla_simbolos.obtener(nombre)
         if not simbolo:
             raise self._error(f"Tactica o funcion '{nombre}' no declarada.", ctx, nombre)

@@ -1,0 +1,52 @@
+proyectar("==================================================");
+proyectar("   DEMO: MACHINE LEARNING PURO EN DAZE (.dz)     ");
+proyectar("==================================================");
+
+# 1. ANALISIS DE ASOCIACION: CORRELACION DE PEARSON
+proyectar("\n--- 1. CORRELACION DE PEARSON ---");
+minutos = [120, 340, 500, 750, 900, 1100, 1300];
+goles   = [1, 3, 4, 7, 8, 11, 14];
+
+coef_r = correlacion(minutos, goles);
+proyectar("Coeficiente de correlacion (minutos vs goles):");
+proyectar(coef_r);
+
+# 2. MODELO PREDICTIVO: REGRESION LINEAL SIMPLE (y = m*x + b)
+proyectar("\n--- 2. REGRESION LINEAL (Minimos Cuadrados) ---");
+modelo_rendimiento = regresion_lineal(minutos, goles);
+
+proyectar("Pendiente calculada (m):");
+proyectar(modelo_rendimiento["m"]);
+
+proyectar("Intercepto calculado (b):");
+proyectar(modelo_rendimiento["b"]);
+
+proyectar("Bondad de ajuste (R^2):");
+proyectar(modelo_rendimiento["r2"]);
+
+# Prediccion para un jugador con 950 minutos
+goles_estimados = predecir_regresion(modelo_rendimiento, 950);
+proyectar("Prediccion de goles para 950 minutos jugados:");
+proyectar(goles_estimados);
+
+# 3. APRENDIZAJE NO SUPERVISADO: K-MEANS (CLUSTERING)
+proyectar("\n--- 3. AGRUPAMIENTO K-MEANS (k=2) ---");
+# Muestra de jugadores [minutos, goles]
+plantilla_vectores = [
+    [100, 1],
+    [150, 0],
+    [200, 1],
+    [1100, 12],
+    [1200, 15],
+    [1300, 14]
+];
+
+resultado_clusters = agrupar_kmedias(plantilla_vectores, 2);
+
+proyectar("Centroides convergidos:");
+proyectar(resultado_clusters["centroides"]);
+
+proyectar("Etiquetas asignadas por cluster:");
+proyectar(resultado_clusters["etiquetas"]);
+
+proyectar("\n>>> Ejecucion de Machine Learning completada sin librerias externas.");

@@ -495,48 +495,25 @@ class DaZeSemanticVisitor(DaZeParserVisitor):
         return valor
 
     def visitGraficar_stmt(self, ctx: DaZeParser.Graficar_stmtContext):
-        # Validacion semantica de la declaracion de visualizacion
-        tipo = ctx.tipo_grafico().getText()
-        valor_tabla = self.visit(ctx.expr())
-        if isinstance(valor_tabla, GrupoTabla):
-            valor_tabla = valor_tabla.tabla_origen
+        tipo = ctx.tipo_grafico().getText().lower()
+        expr_tabla = self.visit(ctx.expr())
 
-        if not isinstance(valor_tabla, Tabla):
-            raise self._error(f"La declaracion de pizarra '{tipo}' requiere una tabla deportiva valida.", ctx.expr())
+        config = {}
+        if hasattr(ctx, "configuracion_grafico"):
+            for c in ctx.configuracion_grafico():
+                clave = c.identificador().getText()
+                try:
+                    valor = self.visit(c.expr())
+                except Exception:
+                    valor = c.expr().getText()
+                if valor is None:
+                    valor = c.expr().getText()
+                config[clave] = str(valor)
 
-        # Validar propiedades configuradas dentro del bloque
-        configs: Dict[str, Any] = {}
-        for c_ctx in ctx.configuracion_grafico():
-            clave = c_ctx.identificador().getText()
-            expr_c = c_ctx.expr()
-            if isinstance(expr_c, DaZeParser.ExprIdentificadorContext):
-                val_txt = expr_c.identificador().getText()
-                if val_txt in valor_tabla.columnas:
-                    val = val_txt
-                else:
-                    simbolo = self.tabla_simbolos.obtener(val_txt)
-                    val = simbolo.valor if simbolo else val_txt
-            else:
-                val = self.visit(expr_c)
-            configs[clave] = val
-
-        for eje in ("eje_x", "eje_y", "x", "y"):
-            if eje in configs:
-                col_name = str(configs[eje])
-                if col_name not in valor_tabla.columnas:
-                    # Advertencia / comprobacion semantica
-                    raise self._error(
-                        f"En la pizarra '{tipo}', la columna '{col_name}' especificada en '{eje}' no existe en la plantilla.",
-                        ctx,
-                        col_name,
-                    )
-
-        print(f"[Pizarra] Especificacion validada para grafico '{tipo}' ({len(valor_tabla)} registros disponibles)")
-        return configs
-
-    # -------------------------------------------------------------
-    # Estructuras de Control y Funciones (Tactica)
-    # -------------------------------------------------------------
+        df_filas = expr_tabla.filas if hasattr(expr_tabla, "filas") else []
+        from src.core.visualizador import renderizar_pizarra_nativa
+        renderizar_pizarra_nativa(tipo, df_filas, config)
+        return None
 
     def visitSi_stmt(self, ctx: DaZeParser.Si_stmtContext):
         condicion = self.visit(ctx.expr())

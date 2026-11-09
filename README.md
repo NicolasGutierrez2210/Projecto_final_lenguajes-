@@ -1,8 +1,8 @@
 # DaZe: DSL para Analítica Deportiva (Sports Analytics DSL)
 
-Este repositorio contiene la implementación completa de **DaZe** (`.dz`), un lenguaje de dominio específico diseñado para modelar flujos reproducibles de análisis de datos deportivos, preparación de plantillas de atletas, simulaciones tácticas y generación de pizarras de rendimiento.
+Este repositorio contiene la implementación completa de **DaZe** (`.dz`), un lenguaje de dominio específico diseñado para modelar flujos reproducibles de análisis de datos deportivos, preparación de plantillas de atletas, simulaciones tácticas, modelos de predicción y generación de pizarras de rendimiento.
 
-El objetivo de DaZe es que los analistas de rendimiento, preparadores físicos y directores técnicos puedan transformar y analizar datos de forma declarativa mediante *pipelines* secuenciales (`|>`), estructuras de datos en memoria y ciclos imperativos propios del dominio deportivo, garantizando un entorno de ejecución desacoplado de dependencias externas pesadas.
+El objetivo de DaZe es que los analistas de rendimiento, preparadores físicos y directores técnicos puedan transformar y analizar datos de forma declarativa mediante *pipelines* secuenciales (`|>`), estructuras de datos en memoria, ciclos imperativos y algoritmos de Machine Learning construidos para el dominio deportivo, garantizando un entorno de ejecución desacoplado de dependencias externas pesadas.
 
 El proyecto utiliza **ANTLR4** para el *front-end* (análisis léxico y sintáctico) y **Python 3.11+** para el análisis semántico y la ejecución interpretada mediante el patrón de diseño **Visitor** sobre una **Tabla de Símbolos** jerárquica con soporte de ámbitos.
 
@@ -59,6 +59,19 @@ Estructuras nativas integradas al sistema de tipos de DaZe:
   - `frente(c)`: Inspección del primer elemento en turno.
 - **Operaciones Compartidas**: `longitud(coleccion)` para consultar el tamaño de arreglos, pilas y colas.
 
+### 5. Motor de Machine Learning y Métodos Numéricos (`src/core/ml.py`)
+Modelos predictivos y algoritmos de agrupamiento construidos desde cero en Python puro:
+- **`correlacion_pearson(x, y)` / `correlacion(x, y)`**: Coeficiente de correlación lineal de Pearson ($r \in [-1.0, 1.0]$) implementado mediante sumatorias de desvíos y raíz babilónica para cuantificar la asociación física entre variables (ej. minutos vs. goles).
+- **`RegresionLineal` / `regresion_lineal(x, y)`**: Modelo de regresión lineal simple ($y = mx + b$).
+  - Ajuste analítico de parámetros ($m, b$) mediante **Mínimos Cuadrados Ordinarios**.
+  - Optimización numérica alternativa mediante **Descenso de Gradiente** (`ajustar_gradiente`).
+  - Cálculo de la métrica de bondad de ajuste o coeficiente de determinación ($R^2$).
+  - Método de inferencia (`predecir` / `predecir_regresion`) para estimar rendimiento futuro.
+- **`KMeans` / `agrupar_kmedias(datos, k)`**: Algoritmo de agrupamiento no supervisado (*Clustering*).
+  - Cálculo de distancias en espacios $D$-dimensionales mediante **Distancia Euclidiana** pura.
+  - Asignación dinámica de clusters y convergencia iterativa de centroides por coordenadas medias.
+  - Segmentación automática de jugadores según perfiles atléticos y tácticos sin etiquetas previas.
+
 ---
 
 ## Estructura del Repositorio
@@ -78,6 +91,7 @@ proyecto_lenguajes/
 |   |   |-- matematica.py     # Newton-Raphson, Series de Taylor y algoritmos puros
 |   |   |-- estadistica.py    # Metricas descriptivas independientes de math
 |   |   |-- estructuras.py    # Implementacion de Pila (LIFO) y Cola (FIFO)
+|   |   |-- ml.py             # Machine Learning puro: Pearson, Regresion Lineal y K-Means
 |   |-- semantic/             # Evaluacion semantica y tiempo de ejecucion
 |   |   |-- tabla_simbolos.py # Tabla de simbolos con soporte de ambitos y tipos
 |   |   |-- visitor.py        # Evaluador semantico e interprete del arbol AST
@@ -96,6 +110,7 @@ proyecto_lenguajes/
 |   |-- correcto_sensores.dz  # Telemetria GPS y deteccion de fatiga cardiovascular
 |   |-- incorrecto_sintaxis.dz# Casos de prueba con errores intencionales
 |   |-- incorrecto_lexico.dz  # Casos con caracteres invalidos
+|-- prueba_ml.dz              # Demostracion integral de Machine Learning en DaZe
 |-- tests/
 |   |-- test_lexer.py         # Pruebas unitarias del analizador lexico
 |   |-- test_parser.py        # Pruebas unitarias de parsing y precedencia
@@ -191,7 +206,36 @@ hipotenusa = raiz(64);
 proyectar(hipotenusa); # 8.0
 ```
 
-### 6. Pizarras Visuales Declarativas
+### 6. Machine Learning y Métricas Predictivas Puras
+```daze
+# 1. Asociacion lineal entre minutos jugados y goles marcados
+minutos = [120, 340, 500, 750, 900, 1100, 1300];
+goles   = [1, 3, 4, 7, 8, 11, 14];
+
+r = correlacion(minutos, goles);
+proyectar(r); # ~0.9916
+
+# 2. Entrenamiento de Regresion Lineal Simple (y = m*x + b)
+modelo = regresion_lineal(minutos, goles);
+proyectar(modelo["m"]);  # Pendiente calculada
+proyectar(modelo["b"]);  # Intercepto calculado
+proyectar(modelo["r2"]); # Coeficiente R^2
+
+# Prediccion de goles esperados para 950 minutos
+goles_estimados = predecir_regresion(modelo, 950);
+proyectar(goles_estimados); # ~9.39 goles
+
+# 3. Agrupamiento no supervisado K-Means (k=2) sobre vectores [minutos, goles]
+perfiles = [
+    [100, 1], [150, 0], [200, 1],      # Suplentes
+    [1100, 12], [1200, 15], [1300, 14] # Titulares
+];
+clusters = agrupar_kmedias(perfiles, 2);
+proyectar(clusters["centroides"]);
+proyectar(clusters["etiquetas"]); # [0, 0, 0, 1, 1, 1]
+```
+
+### 7. Pizarras Visuales Declarativas
 ```daze
 pizarra barras(resumen_posiciones) {
     eje_x = posicion;
@@ -222,6 +266,7 @@ pip install -r requirements.txt
 ### 3. Ejecución de Programas
 Para ejecutar un archivo con el intérprete semántico:
 ```bash
+python3 src/cli.py prueba_ml.dz
 python3 src/cli.py examples/demo_estructuras.dz
 python3 src/cli.py examples/correcto_ventas.dz
 ```
@@ -229,13 +274,13 @@ python3 src/cli.py examples/correcto_ventas.dz
 Opciones de análisis y diagnóstico adicionales:
 ```bash
 # Solo validar sintaxis sin ejecutar
-python3 src/cli.py --check examples/demo_estructuras.dz
+python3 src/cli.py --check prueba_ml.dz
 
 # Visualizar el stream de tokens del Lexer
-python3 src/cli.py --tokens examples/demo_estructuras.dz
+python3 src/cli.py --tokens prueba_ml.dz
 
 # Ver el arbol sintactico concreto (CST) en formato jerarquico
-python3 src/cli.py --tree examples/demo_estructuras.dz
+python3 src/cli.py --tree prueba_ml.dz
 ```
 
 ### 4. Batería de Pruebas Automatizadas

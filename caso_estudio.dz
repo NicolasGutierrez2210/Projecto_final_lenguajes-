@@ -1,0 +1,127 @@
+proyectar("==================================================================");
+proyectar("   CASO DE ESTUDIO OFICIAL: SPORTS ANALYTICS DSL (DAZE .DZ)       ");
+proyectar("==================================================================");
+
+# 1. CARGA INICIAL DE LA PLANTILLA PROFESIONAL
+proyectar("");
+proyectar(">>> [1/5] Cargando plantilla deportiva...");
+plantilla = fichar("datos/rendimiento_jugadores.csv", separador=",", encabezado=verdadero);
+proyectar("Total registros cargados:");
+proyectar(longitud(plantilla));
+
+# 2. LIMPIEZA Y TRANSFORMACION MEDIANTE PIPELINE FUNCIONAL (|>)
+proyectar("");
+proyectar(">>> [2/5] Ejecutando transformacion y derivacion de metricas...");
+analisis_ofensivo = plantilla
+    |> convocar(dorsal, nombre, posicion, minutos, goles, asistencias, distancia_km)
+    |> descartar(minutos >= 800)
+    |> contratar(
+        contribucion = goles + asistencias,
+        promedio_gol = (goles * 90) / minutos,
+        desgaste_minuto = distancia_km / minutos
+    )
+    |> clasificar(por=[contribucion], descendente=verdadero);
+
+top_cinco = analisis_ofensivo |> top(5);
+proyectar("Top 5 jugadores con mayor contribucion ofensiva:");
+proyectar(top_cinco);
+
+# 3. AGREGACION ESTADISTICA DESCRIPTIVA (BALANCE POR POSICION)
+proyectar("");
+proyectar(">>> [3/5] Calculando indicadores agrupados por posicion...");
+resumen_posiciones = analisis_ofensivo
+    |> alinear(por=[posicion])
+    |> balance(
+        total_goles = suma(goles),
+        media_asistencias = media(asistencias),
+        mediana_minutos = mediana(minutos),
+        desv_distancia = desviar(distancia_km),
+        total_jugadores = contar()
+    );
+
+proyectar(resumen_posiciones);
+archivar(resumen_posiciones, en="salidas/resumen_posiciones.csv", separador=",");
+
+# 4. MODELOS DE MACHINE LEARNING Y METODOS NUMERICOS PUROS
+proyectar("");
+proyectar(">>> [4/5] Aplicando Machine Learning sin dependencias externas...");
+
+# A. Correlacion de Pearson: Minutos vs Goles
+minutos_lista = [1250, 1300, 890, 1020, 900, 1180, 940, 1150, 1080, 1120, 980, 1260, 1210, 870, 1170];
+goles_lista   = [  14,   16,   2,    3,   0,   18,   4,   11,    2,   10,   1,    2,    5,   7,    0];
+
+r_pearson = correlacion(minutos_lista, goles_lista);
+proyectar("Coeficiente de correlacion de Pearson (r):");
+proyectar(r_pearson);
+
+# B. Regresion Lineal Simple (MCO)
+modelo_goles = regresion_lineal(minutos_lista, goles_lista);
+proyectar("Pendiente calculada (m):");
+proyectar(modelo_goles["m"]);
+proyectar("Intercepto calculado (b):");
+proyectar(modelo_goles["b"]);
+proyectar("Bondad de ajuste (R^2):");
+proyectar(modelo_goles["r2"]);
+
+# Prediccion para jugador con 1000 minutos de juego
+prediccion_1000 = predecir_regresion(modelo_goles, 1000);
+proyectar("Goles esperados para un jugador con 1000 minutos:");
+proyectar(prediccion_1000);
+
+# C. Agrupamiento K-Means de perfiles [Minutos, Contribucion]
+datos_perfiles = [
+    [1250, 23], [1300, 19], [1180, 22], [1150, 18], [1120, 16],
+    [890, 10],  [940, 16],  [870, 11],  [1210, 11],
+    [1020, 4],  [900, 0],   [1080, 7],  [980, 3],   [1260, 3], [1170, 0]
+];
+
+clusters_plantilla = agrupar_kmedias(datos_perfiles, 3);
+proyectar("Centroides de los 3 grupos tacticos calculados:");
+proyectar(clusters_plantilla["centroides"]);
+proyectar("Etiquetas asignadas por jugador:");
+proyectar(clusters_plantilla["etiquetas"]);
+
+# 5. GENERACION DE LAS 4 PIZARRAS VISUALES (EXPORTACION A PNG)
+proyectar("");
+proyectar(">>> [5/5] Renderizando y exportando pizarras visuales...");
+
+# Visualizacion 1: Barras
+pizarra barras(resumen_posiciones) {
+    eje_x = "posicion";
+    eje_y = "total_goles";
+    titulo = "Goles Totales por Posicion Tactica";
+    color = "royalblue";
+    guardar = "salidas/1_goles_por_posicion.png";
+}
+
+# Visualizacion 2: Dispersion
+pizarra dispersion(analisis_ofensivo) {
+    eje_x = "minutos";
+    eje_y = "contribucion";
+    titulo = "Minutos Disputados vs Contribucion Ofensiva";
+    color = "crimson";
+    guardar = "salidas/2_dispersion_minutos_contribucion.png";
+}
+
+# Visualizacion 3: Histograma
+pizarra histograma(analisis_ofensivo) {
+    eje_x = "minutos";
+    titulo = "Distribucion de Minutos en la Plantilla";
+    color = "seagreen";
+    guardar = "salidas/3_histograma_minutos.png";
+}
+
+# Visualizacion 4: Lineas
+top_ocho = analisis_ofensivo |> top(8);
+pizarra lineas(top_ocho) {
+    eje_x = "nombre";
+    eje_y = "contribucion";
+    titulo = "Curva de Rendimiento Ofensivo Top 8";
+    color = "darkorange";
+    guardar = "salidas/4_lineas_top_ofensivo.png";
+}
+
+proyectar("");
+proyectar("==================================================================");
+proyectar("CASO DE ESTUDIO COMPLETADO Y ARCHIVADO EXITOSAMENTE");
+proyectar("==================================================================");

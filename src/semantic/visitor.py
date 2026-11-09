@@ -1,3 +1,4 @@
+from src.core.visualizador import renderizar_pizarra_nativa
 from src.core.ml import correlacion_pearson, RegresionLineal, KMeans
 from src.core.estructuras import Pila, Cola
 import src.core.matematica as mate

@@ -57,9 +57,14 @@ def ejecutar_bloque(codigo_fuente, visitor):
 
     tree = parser.programa()
 
-    if error_listener.has_errors():
-        for err in error_listener.get_errors():
-            print(f"[Error {err.error_type}] Línea {err.line}:{err.column} -> {err.message}")
+    errores = getattr(error_listener, "errors", [])
+    if errores:
+        for err in errores:
+            tipo = getattr(err, "error_type", "Sintáctico")
+            linea = getattr(err, "line", "?")
+            col = getattr(err, "column", "?")
+            msg = getattr(err, "message", getattr(err, "msg", str(err)))
+            print(f"[Error {tipo}] Línea {linea}:{col} -> {msg}")
         return
 
     try:
@@ -181,9 +186,14 @@ def main():
 
     tree = parser.programa()
 
-    if error_listener.has_errors():
-        for err in error_listener.get_errors():
-            print(f"[Error {err.error_type}] Línea {err.line}:{err.column} -> {err.message}")
+    errores = getattr(error_listener, "errors", [])
+    if errores:
+        for err in errores:
+            tipo = getattr(err, "error_type", "Sintáctico")
+            linea = getattr(err, "line", "?")
+            col = getattr(err, "column", "?")
+            msg = getattr(err, "message", getattr(err, "msg", str(err)))
+            print(f"[Error {tipo}] Línea {linea}:{col} -> {msg}")
         sys.exit(1)
 
     if solo_check:

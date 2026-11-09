@@ -1,196 +1,290 @@
-# DaZe: DSL para analisis deportivo
+# DaZe: DSL para Analítica Deportiva (Sports Analytics DSL)
 
-Este repositorio contiene la implementación de **DaZe** (`.dz`), un lenguaje de dominio específico diseñado para modelar flujos reproducibles de análisis de datos deportivos, preparación de plantillas de jugadores y generación de pizarras de rendimiento.
+Este repositorio contiene la implementación completa de **DaZe** (`.dz`), un lenguaje de dominio específico diseñado para modelar flujos reproducibles de análisis de datos deportivos, preparación de plantillas de atletas, simulaciones tácticas, modelos de predicción y generación de pizarras de rendimiento.
 
-El objetivo de DaZe es que cualquier persona interesada en analítica deportiva (como analistas de rendimiento, directores técnicos o cuerpos técnicos) pueda transformar datos de manera sencilla y declarativa mediante pipelines secuenciales (`|>`), utilizando palabras clave del mundo deportivo y sin tener que enredarse con código complejo de propósito general.
+El objetivo de DaZe es que los analistas de rendimiento, preparadores físicos y directores técnicos puedan transformar y analizar datos de forma declarativa mediante *pipelines* secuenciales (`|>`), estructuras de datos en memoria, ciclos imperativos y algoritmos de Machine Learning construidos para el dominio deportivo, garantizando un entorno de ejecución desacoplado de dependencias externas pesadas.
 
-El proyecto utiliza **ANTLR4** para el front-end (análisis léxico y sintáctico) y **Python 3.11+** para el análisis semántico y la ejecución a través del patrón **Visitor**. Además, desarrollamos **nuestras propias librerías nativas** de procesamiento tabular y estadística descriptiva para no depender de librerías externas pesadas como pandas o numpy.
+El proyecto utiliza **ANTLR4** para el *front-end* (análisis léxico y sintáctico) y **Python 3.11+** para el análisis semántico y la ejecución interpretada mediante el patrón de diseño **Visitor** sobre una **Tabla de Símbolos** jerárquica con soporte de ámbitos.
 
 ---
 
-## Nuestras librerías propias (`src/core/`)
+## Arquitectura de Librerías Nativas (`src/core/`)
 
-En lugar de usar librerías de terceros como pandas o numpy, construimos nuestras propias soluciones en Python dentro de `src/core/`. Esto nos permitió entender de raíz cómo se representan y manipulan las estructuras de datos tabulares en memoria y cómo se aplican las operaciones sobre los datos.
+Para garantizar la autonomía del lenguaje y cumplir estrictamente con los lineamientos de diseño algorítmico, **no se utilizan bibliotecas externas como `pandas`, `numpy`, `scikit-learn` o el módulo estándar `math`**. Todas las estructuras y motores de cálculo han sido construidos desde cero en Python puro dentro de `src/core/`:
 
 ### 1. `racoons (Tabla)` (`src/core/racoons.py`)
-Es nuestra clase principal para manejar conjuntos de datos bidimensionales (filas y columnas):
-- **`csvread(ruta, separador=',', encabezado=verdadero)`**: Lee archivos delimitados utilizando el módulo nativo de CSV de Python, infiriendo automáticamente tipos de datos (enteros, decimales, booleanos `verdadero`/`falso` y valores `nulo`).
-- **`csvsave(ruta, separador=',')`**: Escribe la tabla en disco y crea automáticamente las carpetas de salida si no existen.
-- **`convocar(columnas)`**: Proyecta únicamente las columnas indicadas, validando que todas existan en el esquema.
-- **`descartar(condicion)`**: Filtra registros aplicando funciones lógicas fila por fila.
-- **`contratar(columnas_dict)`**: Crea o actualiza columnas calculadas a partir de expresiones.
-- **`rebautizar(mapeo)`**: Cambia los nombres de variables existentes.
-- **`clasificar(columnas, descendente)`**: Ordena las filas según una o varias columnas de forma ascendente o descendente.
-- **`alinear(columnas_grupo)`**: Particiona la tabla en grupos según las variables clave (`GrupoTabla`).
-- **`balance(agregaciones)`**: Aplica funciones de agregación por grupo o sobre la tabla entera para producir una nueva tabla resumen.
-- **`sanear(reemplazos)`**: Imputa datos faltantes o nulos en columnas determinadas.
-- **`depurar(columnas)`**: Limpia registros duplicados de la plantilla.
-- **`top(n)`**: Conserva los primeros `n` registros.
-- **`mostrar(limite=10)`**: Genera una vista en texto alineada con bordes ASCII para imprimir en la consola.
+Estructura tabular bidimensional nativa para la manipulación inmutable de datos deportivos:
+- **`csvread(ruta, separador=',', encabezado=verdadero)`**: Lectura de archivos CSV con inferencia automática de tipos (enteros, decimales, booleanos y valores nulos).
+- **`csvsave(ruta, separador=',')`**: Exportación de tablas a disco asegurando la creación recursiva de directorios.
+- **`convocar(columnas)`**: Proyección selectiva de atributos, validando su existencia en el esquema.
+- **`descartar(condicion)`**: Filtrado condicional no destructivo de registros.
+- **`contratar(columnas_dict)`**: Derivación y cálculo de nuevas métricas mediante expresiones aritméticas.
+- **`rebautizar(mapeo)`**: Renombrado de variables existentes.
+- **`clasificar(columnas, descendente)`**: Ordenamiento múltiple de registros en orden ascendente o descendente.
+- **`alinear(columnas_grupo)`**: Particionamiento y agrupación de registros (*GroupBy*).
+- **`balance(agregaciones)`**: Resumen estadístico multivariable sobre grupos o tablas globales.
+- **`sanear(reemplazos)`**: Imputación de datos faltantes o bajas médicas.
+- **`depurar(columnas)`**: Deduplicación de registros en la plantilla.
+- **`top(n)`**: Truncamiento de los primeros $n$ registros destacados.
+- **`mostrar(limite=10)`**: Renderizado tabular en consola con bordes ASCII alineados.
 
-### 2. `Estadistica` (`src/core/estadistica.py`)
-Módulo numérico puro que implementa cálculos descriptivos sin dependencias externas:
-- **`suma(valores)`**: Acumula valores numéricos ignorando nulos.
-- **`media(valores)`**: Calcula el promedio aritmético.
-- **`mediana(valores)`**: Determina el valor central (o el promedio de los dos centrales si la cantidad es par).
-- **`minimo(valores)`** y **`maximo(valores)`**: Encuentran los valores extremos.
-- **`desviar(valores)`**: Calcula la desviación estándar muestral.
-- **`contar(valores)`**: Cuenta la cantidad de registros válidos.
+### 2. Motor Matemático Puro (`src/core/matematica.py`)
+Módulo algorítmico implementado sin dependencias de la librería estándar `math`:
+- **`raiz_cuadrada(x)` / `raiz(x)`**: Algoritmo iterativo de Newton-Raphson / Babilónico ($x_{k+1} = \frac{1}{2}(x_k + \frac{n}{x_k})$) con tolerancia de $10^{-12}$.
+- **`seno(x)` y `coseno(x)`**: Aproximación trigonométrica de alta precisión mediante Series de Taylor con normalización modular al rango $[-\pi, \pi]$.
+- **`tangente(x)`**: Razón trigonométrica con control de asíntotas y división por cero.
+- **`potencia(base, exp)`**: Exponenciación entera positiva, negativa y fraccionaria pura.
+- **`valor_absoluto(x)` / `abs(x)`**: Magnitud escalar.
+
+### 3. Estadística Descriptiva (`src/core/estadistica.py`)
+Operaciones descriptivas desacopladas que operan sobre colecciones e iterables:
+- **`suma(valores)`**: Sumatoria ignorando registros nulos o inválidos.
+- **`media(valores)`**: Promedio aritmético.
+- **`mediana(valores)`**: Valor central tras ordenamiento determinístico.
+- **`minimo(valores)`** y **`maximo(valores)`**: Extremos de la serie.
+- **`desviar(valores)` / `desv_std`**: Desviación estándar muestral utilizando la raíz cuadrada babilónica pura.
+- **`contar(valores)`**: Conteo de registros válidos.
+
+### 4. Estructuras de Datos Lineales (`src/core/estructuras.py`)
+Estructuras nativas integradas al sistema de tipos de DaZe:
+- **`Pila` (LIFO)**:
+  - `pila()`: Inicialización en memoria.
+  - `apilar(p, elemento)`: Inserción en el tope.
+  - `desapilar(p)`: Extracción destructiva del tope.
+  - `tope(p)`: Inspección del valor superior sin remoción.
+- **`Cola` (FIFO)**:
+  - `cola()`: Inicialización en memoria.
+  - `encolar(c, elemento)`: Inserción al final de la fila.
+  - `desencolar(c)`: Extracción destructiva del frente.
+  - `frente(c)`: Inspección del primer elemento en turno.
+- **Operaciones Compartidas**: `longitud(coleccion)` para consultar el tamaño de arreglos, pilas y colas.
+
+### 5. Motor de Machine Learning y Métodos Numéricos (`src/core/ml.py`)
+Modelos predictivos y algoritmos de agrupamiento construidos desde cero en Python puro:
+- **`correlacion_pearson(x, y)` / `correlacion(x, y)`**: Coeficiente de correlación lineal de Pearson ($r \in [-1.0, 1.0]$) implementado mediante sumatorias de desvíos y raíz babilónica para cuantificar la asociación física entre variables (ej. minutos vs. goles).
+- **`RegresionLineal` / `regresion_lineal(x, y)`**: Modelo de regresión lineal simple ($y = mx + b$).
+  - Ajuste analítico de parámetros ($m, b$) mediante **Mínimos Cuadrados Ordinarios**.
+  - Optimización numérica alternativa mediante **Descenso de Gradiente** (`ajustar_gradiente`).
+  - Cálculo de la métrica de bondad de ajuste o coeficiente de determinación ($R^2$).
+  - Método de inferencia (`predecir` / `predecir_regresion`) para estimar rendimiento futuro.
+- **`KMeans` / `agrupar_kmedias(datos, k)`**: Algoritmo de agrupamiento no supervisado (*Clustering*).
+  - Cálculo de distancias en espacios $D$-dimensionales mediante **Distancia Euclidiana** pura.
+  - Asignación dinámica de clusters y convergencia iterativa de centroides por coordenadas medias.
+  - Segmentación automática de jugadores según perfiles atléticos y tácticos sin etiquetas previas.
 
 ---
 
-## Tabla de símbolos y ambitos (`src/semantic/tabla_simbolos.py`)
+## Estructura del Repositorio
 
-Para que el intérprete sepa en todo momento qué variables, tablas y funciones existen, implementamos una `TablaSimbolos` jerárquica con soporte de ámbitos:
-- **Ámbito global**: Almacena las tablas cargadas con `fichar`, los resultados de pipelines y las variables generales.
-- **Ámbitos locales**: Se crean automáticamente al ejecutar funciones (`tactica`), aislando los parámetros y variables locales del resto del programa.
-- **Validación de esquemas**: Cuando un símbolo es de tipo `TABLA`, la tabla de símbolos guarda el listado de columnas disponibles para validar rápidamente si una columna existe antes de intentar operarla.
-
----
-
-## Intérprete semántico con patrón visitor (`src/semantic/visitor.py`)
-
-Heredando de `DaZeParserVisitor` (generado por ANTLR), `DaZeSemanticVisitor` recorre el árbol sintáctico y se encarga de:
-1. **Evaluar expresiones**: Aritmética (`+`, `-`, `*`, `/`, `%`, `^`), comparaciones (`==`, `!=`, `<`, `>`, `<=`, `>=`) y lógica (`y`, `o`, `no`).
-2. **Conectar columnas en pipelines**: Al ejecutar operaciones fila por fila (como en `descartar` o `contratar`), inyecta los valores de las columnas del registro actual para que las expresiones las resuelvan directamente.
-3. **Controlar el flujo**: Ejecuta bloques `si` y `sino` según la condición evaluada.
-4. **Ejecutar tácticas**: Gestiona llamadas a funciones, evalúa argumentos, crea el ámbito local y captura el valor de retorno emitido por `resultado`.
-5. **Validar declaraciones de pizarra**: Revisa semánticamente que la tabla exista y que las columnas configuradas (como `eje_x` o `eje_y`) pertenezcan efectivamente a la plantilla.
-6. **Reportar diagnósticos claros**: Si ocurre un error semántico (por ejemplo, usar una variable no definida o una columna que no está en la plantilla), reporta el mensaje exacto con el número de línea y columna.
-
----
-
-## Características y sintaxis del lenguaje
-
-### 1. Carga y guardado de datos
-```daze
-jugadores = fichar("datos/plantilla_temporada.csv", separador=",", encabezado=verdadero);
-archivar(resumenposiciones, en="salidas/resumenposiciones.csv", separador=",");
+```text
+proyecto_lenguajes/
+|-- grammar/
+|   |-- DaZeLexer.g4          # Definicion lexica: palabras clave deportivas, operadores y literales
+|   |-- DaZeParser.g4         # Definicion sintactica: sentencias, bucles, arreglos y pipelines
+|-- src/
+|   |-- __init__.py           # Fachada de compilacion y parseo
+|   |-- cli.py                # Interfaz de linea de comandos (CLI) y modo interactivo (REPL)
+|   |-- errors.py             # Listener de errores lexicos y sintacticos en espanol
+|   |-- tree_viewer.py        # Visualizador jerarquico del arbol sintactico (CST/AST)
+|   |-- core/                 # Librerias nativas en Python puro (Cero dependencias)
+|   |   |-- racoons.py        # Motor de DataFrames (Tabla y GrupoTabla)
+|   |   |-- matematica.py     # Newton-Raphson, Series de Taylor y algoritmos puros
+|   |   |-- estadistica.py    # Metricas descriptivas independientes de math
+|   |   |-- estructuras.py    # Implementacion de Pila (LIFO) y Cola (FIFO)
+|   |   |-- ml.py             # Machine Learning puro: Pearson, Regresion Lineal y K-Means
+|   |-- semantic/             # Evaluacion semantica y tiempo de ejecucion
+|   |   |-- tabla_simbolos.py # Tabla de simbolos con soporte de ambitos y tipos
+|   |   |-- visitor.py        # Evaluador semantico e interprete del arbol AST
+|   |-- generated/            # Clases autogeneradas por ANTLR4
+|       |-- DaZeLexer.py
+|       |-- DaZeParser.py
+|       |-- DaZeParserVisitor.py
+|       |-- DaZeParserListener.py
+|-- docs/
+|   |-- especificacion_lenguaje.md  # Catalogo formal de tipos, operadores e instrucciones
+|   |-- gramatica_ebnf.md          # Especificacion sintactica en formato EBNF
+|-- examples/
+|   |-- demo_estructuras.dz   # Prueba integral de arreglos, diccionarios, pilas, colas y bucles
+|   |-- correcto_ventas.dz    # Pipeline de rendimiento de jugadores del primer equipo
+|   |-- correcto_estudiantes.dz # Evaluacion y metricas en divisiones menores
+|   |-- correcto_sensores.dz  # Telemetria GPS y deteccion de fatiga cardiovascular
+|   |-- incorrecto_sintaxis.dz# Casos de prueba con errores intencionales
+|   |-- incorrecto_lexico.dz  # Casos con caracteres invalidos
+|-- prueba_ml.dz              # Demostracion integral de Machine Learning en DaZe
+|-- tests/
+|   |-- test_lexer.py         # Pruebas unitarias del analizador lexico
+|   |-- test_parser.py        # Pruebas unitarias de parsing y precedencia
+|   |-- test_errors.py        # Pruebas de captura de errores y diagnostico
+|-- requirements.txt          # Dependencia unica del runtime: antlr4-python3-runtime
+|-- .gitignore                # Reglas de exclusion de control de versiones
+|-- README.md                 # Documentacion tecnica principal
 ```
 
-### 2. Pipelines de transformación (`|>`)
-Las operaciones se encadenan de forma limpia y legible:
+---
+
+## Sintaxis y Capacidades del Lenguaje
+
+### 1. Carga, Asignación y Proyección
 ```daze
-jugadoresaptos = jugadores
+plantilla = fichar("datos/plantilla_temporada.csv", separador=",", encabezado=verdadero);
+proyectar("Plantilla cargada exitosamente.");
+```
+
+### 2. Estructuras de Datos (Arreglos, Diccionarios, Pilas y Colas)
+DaZe cuenta con soporte de literales, indexación y mutación por corchetes `[]`:
+```daze
+# Arreglos y matrices bidimensionales
+dorsales = [10, 7, 9];
+dorsales[1] = 11;
+
+matriz_tactica = [
+    [1, 0],
+    [0, 1]
+];
+
+# Diccionarios asociativos
+ficha = {
+    "nombre": "Kylian",
+    "goles": 24
+};
+proyectar(ficha["goles"]);
+
+# Pilas y Colas nativas
+estrategias = pila();
+apilar(estrategias, "Presion Alta");
+estrategia_activa = tope(estrategias);
+
+turnos = cola();
+encolar(turnos, "Jugador 1");
+desencolar(turnos);
+```
+
+### 3. Ciclos Temáticos Imperativos
+- **`en_juego (condicion) { ... }`**: Bucle condicional (*while*) para simulaciones continuas o decrementos iterativos.
+- **`ronda (elemento en coleccion) { ... }`**: Bucle de recorrido (*for-in*) sobre arreglos, listas y tablas.
+```daze
+contador = 3;
+en_juego (contador > 0) {
+    proyectar(contador);
+    contador = contador - 1;
+}
+
+ronda (num en dorsales) {
+    proyectar(num);
+}
+```
+
+### 4. Pipelines de Transformación Tabular (`|>`)
+```daze
+titulares = plantilla
     |> convocar(dorsal, club, posicion, minutos, goles, asistencias)
     |> descartar(minutos > 0 y goles >= 0)
     |> contratar(
         contribucion = goles + asistencias,
-        promediogol = (goles * 90) / minutos,
-        rendimientototal = (contribucion * 1.5) + (minutos / 100)
+        promedio_gol = (goles * 90) / minutos,
+        rendimiento = (contribucion * 1.5) + (minutos / 100)
     )
-    |> clasificar(por=[rendimientototal], descendente=verdadero);
+    |> clasificar(por=[rendimiento], descendente=verdadero)
+    |> top(11);
 
-resumenposiciones = jugadoresaptos
+resumen_posiciones = titulares
     |> alinear(por=[posicion])
     |> balance(
-        golestotales = suma(goles),
-        mediaasistencias = media(asistencias),
-        medianaminutos = mediana(minutos),
-        desviarendimiento = desviar(rendimientototal),
-        totalconvocados = contar()
+        goles_totales = suma(goles),
+        media_asistencias = media(asistencias),
+        total_convocados = contar()
     );
+
+archivar(resumen_posiciones, en="salidas/resumen_posiciones.csv", separador=",");
 ```
 
-### 3. Proyecciones en consola
+### 5. Cálculo Matemático Puro
 ```daze
-proyectar("Resumen calculado exitosamente:");
-proyectar(resumenposiciones);
+angulo = 1.047; # ~60 grados en radianes
+val_seno = seno(angulo);
+hipotenusa = raiz(64);
+proyectar(hipotenusa); # 8.0
 ```
 
-### 4. Tácticas (funciones) y condicionales
+### 6. Machine Learning y Métricas Predictivas Puras
 ```daze
-tactica alertasobrecarga(frecuenciacardiaca, distanciakm) {
-    si (frecuenciacardiaca > 185) {
-        proyectar("Alerta: Sobrecarga cardiovascular detectada");
-    } sino {
-        proyectar("Rango aerobico optimo");
-    }
-    resultado frecuenciacardiaca * 1.05;
-}
+# 1. Asociacion lineal entre minutos jugados y goles marcados
+minutos = [120, 340, 500, 750, 900, 1100, 1300];
+goles   = [1, 3, 4, 7, 8, 11, 14];
 
-ajuste = alertasobrecarga(188, 10.5);
+r = correlacion(minutos, goles);
+proyectar(r); # ~0.9916
+
+# 2. Entrenamiento de Regresion Lineal Simple (y = m*x + b)
+modelo = regresion_lineal(minutos, goles);
+proyectar(modelo["m"]);  # Pendiente calculada
+proyectar(modelo["b"]);  # Intercepto calculado
+proyectar(modelo["r2"]); # Coeficiente R^2
+
+# Prediccion de goles esperados para 950 minutos
+goles_estimados = predecir_regresion(modelo, 950);
+proyectar(goles_estimados); # ~9.39 goles
+
+# 3. Agrupamiento no supervisado K-Means (k=2) sobre vectores [minutos, goles]
+perfiles = [
+    [100, 1], [150, 0], [200, 1],      # Suplentes
+    [1100, 12], [1200, 15], [1300, 14] # Titulares
+];
+clusters = agrupar_kmedias(perfiles, 2);
+proyectar(clusters["centroides"]);
+proyectar(clusters["etiquetas"]); # [0, 0, 0, 1, 1, 1]
 ```
 
-### 5. Pizarras visuales
+### 7. Pizarras Visuales Declarativas
 ```daze
-pizarra barras(resumenposiciones) {
+pizarra barras(resumen_posiciones) {
     eje_x = posicion;
-    eje_y = golestotales;
+    eje_y = goles_totales;
     titulo = "Goles Totales por Posicion";
     color = "azul";
-    guardar = "salidas/golesporposicion.png";
+    guardar = "salidas/goles_por_posicion.png";
 }
 ```
 
 ---
 
-## Guía de ejecución (Linux)
+## Guía de Ejecución y Pruebas
 
-### 1. Requisitos previos
-Tener instalados Python 3.11 o superior, `python3-venv` y Java (JRE 11+ únicamente en caso de querer recompilar las gramáticas `.g4` de ANTLR): (usar apt solo si la distro lo permite, usa el package manager de la distro que tengas xd)
+### 1. Requisitos Previos
+- Python 3.11 o superior.
+- Java JRE 11+ (requerido únicamente si se recompilan las gramáticas `.g4` de ANTLR).
 
+### 2. Instalación
 ```bash
-sudo apt update
-sudo apt install python3 python3-pip python3-venv openjdk-17-jre -y
-```
-
-### 2. Preparar el entorno virtual
-Se recomienda aislar el entorno de trabajo para evitar conflictos con dependencias existentes:
-
-```bash
-cd Proyecto_lenguajes
+git clone https://github.com/NicolasGutierrez2210/Projecto_final_lenguajes-.git
+cd Projecto_final_lenguajes-
 python3 -m venv venv
 source venv/bin/activate
-```
-
-### 3. Instalar dependencias
-Instalar el runtime de ANTLR4 (nuestro motor de datos y estadísticas no requiere paquetes externos adicionales):
-
-```bash
 pip install -r requirements.txt
 ```
 
-### 4. Ejecutar un programa en DaZe
-
+### 3. Ejecución de Programas
+Para ejecutar un archivo con el intérprete semántico:
 ```bash
+python3 src/cli.py prueba_ml.dz
+python3 src/cli.py examples/demo_estructuras.dz
 python3 src/cli.py examples/correcto_ventas.dz
-python3 src/cli.py examples/correcto_sensores.dz
-python3 src/cli.py examples/correcto_estudiantes.dz
 ```
 
-Al ejecutarse, el flujo procesa los datos, muestra las tablas y mensajes en consola, valida las especificaciones de las pizarras y genera los archivos CSV correspondientes dentro del directorio `salidas/`.
+Opciones de análisis y diagnóstico adicionales:
+```bash
+# Solo validar sintaxis sin ejecutar
+python3 src/cli.py --check prueba_ml.dz
 
-### 5. Opciones adicionales (opcionales)
-- **Solo validar sintaxis sin ejecutar:**
-  ```bash
-  python3 src/cli.py --check examples/correcto_ventas.dz
-  ```
-- **Ver la secuencia de tokens reconocidos por el lexer:**
-  ```bash
-  python3 src/cli.py --tokens examples/correcto_ventas.dz
-  ```
-- **Imprimir el árbol sintáctico (parse tree) en formato texto:**
-  ```bash
-  python3 src/cli.py --tree examples/correcto_ventas.dz
-  ```
-- **Probar el diagnóstico de errores semánticos:**
-  ```bash
-  python3 src/cli.py examples/incorrecto_semantico_variable.dz
-  python3 src/cli.py examples/incorrecto_semantico_columna.dz
-  python3 src/cli.py examples/incorrecto_semantico_tipos.dz
-  ```
+# Visualizar el stream de tokens del Lexer
+python3 src/cli.py --tokens prueba_ml.dz
 
-### 6. Ejecución de pruebas
-Para correr todas las pruebas
+# Ver el arbol sintactico concreto (CST) en formato jerarquico
+python3 src/cli.py --tree prueba_ml.dz
+```
 
+### 4. Batería de Pruebas Automatizadas
+Para ejecutar toda la suite de pruebas unitarias:
 ```bash
 python3 -m unittest discover -s tests -p "test_*.py" -v
-```
-
-### 7. Regeneración de la gramática (opcional)
-Los archivos de ANTLR ya se encuentran generados en `src/generated/`. Sin embargo, si se modifican `grammar/DaZeLexer.g4` o `grammar/DaZeParser.g4`, se pueden recompilar con:
-
-```bash
-antlr4 -Dlanguage=Python3 -visitor -o src/generated grammar/DaZeLexer.g4 grammar/DaZeParser.g4
 ```
